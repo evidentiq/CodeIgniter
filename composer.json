@@ -34,12 +34,12 @@
 	"require-dev": {
 		"mikey179/vfsstream": "1.6.*",
 		"phpunit/phpunit": "4.* || 5.* || 9.*"
-	}
+	},
 	"config": {
-        "github-protocols": ["ssh", "https"],
-        "preferred-install": {
-            "carenity/*": "source",
-            "*": "dist"
-        }
-    },
+        	"github-protocols": ["ssh", "https"],
+        	"preferred-install": {
+            		"carenity/*": "source",
+            		"*": "dist"
+        	}
+    	}
 }
