@@ -16,9 +16,9 @@
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"
 	},
-    "replace": {
-        "codeigniter/framework": "3.1.13"
-    },
+    	"replace": {
+        	"codeigniter/framework": "3.1.13"
+    	},
 	"scripts": {
 		"test:coverage": [
 			"@putenv XDEBUG_MODE=coverage",
@@ -35,4 +35,11 @@
 		"mikey179/vfsstream": "1.6.*",
 		"phpunit/phpunit": "4.* || 5.* || 9.*"
 	}
+	"config": {
+        "github-protocols": ["ssh", "https"],
+        "preferred-install": {
+            "carenity/*": "source",
+            "*": "dist"
+        }
+    },
 }
