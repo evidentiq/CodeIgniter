@@ -763,8 +763,12 @@ class CI_Session {
 	 */
 	public function sess_regenerate($destroy = FALSE)
 	{
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_start();
+		}
 		$_SESSION['__ci_last_regenerate'] = time();
 		session_regenerate_id($destroy);
+        session_write_close();
 	}
 
 	// ------------------------------------------------------------------------
@@ -833,6 +837,9 @@ class CI_Session {
 	 */
 	public function set_userdata($data, $value = NULL)
 	{
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_start();
+		}
 		if (is_array($data))
 		{
 			foreach ($data as $key => &$value)
@@ -840,10 +847,12 @@ class CI_Session {
 				$_SESSION[$key] = $value;
 			}
 
+        	session_write_close();
 			return;
 		}
 
 		$_SESSION[$data] = $value;
+        session_write_close();
 	}
 
 	// ------------------------------------------------------------------------
