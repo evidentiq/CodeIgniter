@@ -748,7 +748,10 @@ class CI_Session {
 	 */
 	public function sess_destroy()
 	{
-		session_destroy();
+		$ci = get_instance();
+		if (!$ci->input->is_ajax_request() && session_status() != PHP_SESSION_DISABLED) {
+			session_destroy();
+		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -1036,6 +1039,13 @@ class CI_Session {
 	public function unset_tempdata($key)
 	{
 		$this->unmark_temp($key);
+	}
+
+	public function __destructor()
+	{
+		if (session_status() == PHP_SESSION_ACTIVE) {
+        	session_write_close();
+        }
 	}
 
 }
