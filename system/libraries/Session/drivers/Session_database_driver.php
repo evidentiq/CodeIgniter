@@ -160,7 +160,9 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		$this->_db->reset_query();
 
 		// Needed by write() to detect session_regenerate_id() calls
-		$this->_session_id = $session_id;
+		if (!isset($this->_session_id)) {
+			$this->_session_id = $session_id;
+		}
 
 		$this->_db
 			->select('data')
