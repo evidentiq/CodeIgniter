@@ -136,36 +136,11 @@ class CI_Session {
 
 		session_start();
 
-
-		if (isset($_SESSION['destroyed'])) {
-			if ($_SESSION['destroyed'] < time() - 300) {
-				// Should not happen usually. This could be attack or due to unstable network.
-				// Remove all authentication status of this users session.
-				//remove_all_authentication_flag_from_active_sessions($_SESSION['userid']);
-				//throw(new DestroyedSessionAccessException);
-				get_instance()->dic['log.php']->error(session_id() . '-SESSION DESTROYED AND TOO OLD');
-			}
-			if (isset($_SESSION['new_session_id'])) {
-				// Not fully expired yet. Could be lost cookie by unstable network.
-				// Try again to set proper session ID cookie.
-				// NOTE: Do not try to set session ID again if you would like to remove
-				// authentication flag.
-				get_instance()->dic['log.php']->error(session_id() . '-SESSION DESTROYED -> USE NEW SESSION ID-' . $_SESSION['new_session_id']);
-
-				session_commit();
-				session_id($_SESSION['new_session_id']);
-				// New session ID should exist
-				session_start();
-				//return;
-			}
-		}
-
 		// Is session ID auto-regeneration configured? (ignoring ajax requests)
-		if ((empty($_SERVER['HTTP_X_REQUESTED_WITH']) OR strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') && $_SERVER['REQUEST_URI'] != '/csp/report/member'
+		if ((empty($_SERVER['HTTP_X_REQUESTED_WITH']) OR strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest')
 			&& ($regenerate_time = config_item('sess_time_to_update')) > 0
 		)
 		{
-			get_instance()->dic['log.php']->error('WILL REGENERATE SESSION - NOT AJAX REQUEST');
 			if ( ! isset($_SESSION['__ci_last_regenerate']))
 			{
 				$_SESSION['__ci_last_regenerate'] = time();
@@ -244,9 +219,9 @@ class CI_Session {
 		if ( ! class_exists('CI_Session_driver', FALSE))
 		{
 			require_once(
-			file_exists(APPPATH.'libraries/Session/Session_driver.php')
-				? APPPATH.'libraries/Session/Session_driver.php'
-				: BASEPATH.'libraries/Session/Session_driver.php'
+				file_exists(APPPATH.'libraries/Session/Session_driver.php')
+					? APPPATH.'libraries/Session/Session_driver.php'
+					: BASEPATH.'libraries/Session/Session_driver.php'
 			);
 
 			if (file_exists($file_path = APPPATH.'libraries/Session/'.$prefix.'Session_driver.php'))
@@ -773,10 +748,7 @@ class CI_Session {
 	 */
 	public function sess_destroy()
 	{
-//		$ci = get_instance();
-//		if (!$ci->input->is_ajax_request() && session_status() != PHP_SESSION_DISABLED) {
 		session_destroy();
-//		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -792,26 +764,7 @@ class CI_Session {
 	public function sess_regenerate($destroy = FALSE)
 	{
 		$_SESSION['__ci_last_regenerate'] = time();
-//		session_regenerate_id($destroy);
-
-		$new_session_id = session_create_id();
-
-		// backup session variables
-		$keepSession = $_SESSION ;
-
-		// add info for users with bad connection not receiving the new session id
-		$_SESSION['new_session_id'] = $new_session_id;
-		// Set destroy timestamp
-		$_SESSION['destroyed'] = time();
-		get_instance()->dic['log.php']->error(session_id() . '-Regenerate Session-New-'.$new_session_id.'-destroyed-'.$_SESSION['destroyed']);
-		// Write and close current session;
-		session_commit() ;
-
-		// Start session with new session ID
-		ini_set('session.use_strict_mode', 0);
-		session_id($new_session_id);
-		session_start();
-		$_SESSION = $keepSession;
+		session_regenerate_id($destroy);
 	}
 
 	// ------------------------------------------------------------------------
@@ -887,12 +840,10 @@ class CI_Session {
 				$_SESSION[$key] = $value;
 			}
 
-			//session_write_close();
 			return;
 		}
 
 		$_SESSION[$data] = $value;
-		//session_write_close();
 	}
 
 	// ------------------------------------------------------------------------

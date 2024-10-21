@@ -135,7 +135,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		}
 
 		$this->php5_validate_id();
-		get_instance()->dic['log.php']->error($save_path . '-' . $name . '-open-' . (int) $this->_success);
 
 		return $this->_success;
 	}
@@ -154,7 +153,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 	{
 		if ($this->_get_lock($session_id) === FALSE)
 		{
-			get_instance()->dic['log.php']->error($session_id . '-read-#1-' . $this->_failure);
 			return $this->_failure;
 		}
 
@@ -162,10 +160,7 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		$this->_db->reset_query();
 
 		// Needed by write() to detect session_regenerate_id() calls
-		if (!isset($this->_session_id)) {
-			get_instance()->dic['log.php']->error($session_id . '-read-#1.1-regenerate');
-			$this->_session_id = $session_id;
-		}
+		$this->_session_id = $session_id;
 
 		$this->_db
 			->select('data')
@@ -184,7 +179,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 			// FALSE instead of relying on the default ...
 			$this->_row_exists = FALSE;
 			$this->_fingerprint = md5('');
-			get_instance()->dic['log.php']->error($session_id . '-read-#2');
 			return '';
 		}
 
@@ -197,9 +191,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 
 		$this->_fingerprint = md5($result);
 		$this->_row_exists = TRUE;
-
-		get_instance()->dic['log.php']->error($session_id . '-read-#3-' . $this->_fingerprint);
-
 		return $result;
 	}
 
@@ -224,17 +215,14 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		{
 			if ( ! $this->_release_lock() OR ! $this->_get_lock($session_id))
 			{
-				get_instance()->dic['log.php']->error($session_id . '-write-#1-' . (int) $this->_failure);
 				return $this->_failure;
 			}
 
 			$this->_row_exists = FALSE;
 			$this->_session_id = $session_id;
-			get_instance()->dic['log.php']->error($session_id . '-write-#1.1-regenerate');
 		}
 		elseif ($this->_lock === FALSE)
 		{
-			get_instance()->dic['log.php']->error($session_id . '-write-#2-' . (int) $this->_failure);
 			return $this->_failure;
 		}
 
@@ -251,11 +239,8 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 			{
 				$this->_fingerprint = md5($session_data);
 				$this->_row_exists = TRUE;
-				get_instance()->dic['log.php']->error($session_id . '-write-#3-' . (int) $this->_success);
-
 				return $this->_success;
 			}
-			get_instance()->dic['log.php']->error($session_id . '-write-#4-' . (int) $this->_failure);
 
 			return $this->_failure;
 		}
@@ -277,11 +262,8 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		if ($this->_db->update($this->_config['save_path'], $update_data))
 		{
 			$this->_fingerprint = md5($session_data);
-			get_instance()->dic['log.php']->error($session_id . '-write-#5-' . (int) $this->_success);
-
 			return $this->_success;
 		}
-		get_instance()->dic['log.php']->error($session_id . '-write-#6-' . (int) $this->_failure);
 
 		return $this->_failure;
 	}
@@ -297,10 +279,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 	 */
 	public function close()
 	{
-		get_instance()->dic['log.php']->error('close-' . (int) ($this->_lock && ! $this->_release_lock())
-			? $this->_failure
-			: $this->_success);
-
 		return ($this->_lock && ! $this->_release_lock())
 			? $this->_failure
 			: $this->_success;
@@ -331,7 +309,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 
 			if ( ! $this->_db->delete($this->_config['save_path']))
 			{
-				get_instance()->dic['log.php']->error($session_id . '-destroy-#1-' . (int) $this->_failure);
 				return $this->_failure;
 			}
 		}
@@ -339,10 +316,9 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		if ($this->close() === $this->_success)
 		{
 			$this->_cookie_destroy();
-			get_instance()->dic['log.php']->error($session_id . '-destroy-#2-' . (int) $this->_success);
 			return $this->_success;
 		}
-		get_instance()->dic['log.php']->error($session_id . '-destroy-#3-' . (int) $this->_failure);
+
 		return $this->_failure;
 	}
 
@@ -379,13 +355,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 	 */
 	public function updateTimestamp($id, $unknown)
 	{
-		// Do not update timestamp for AJAX requests
-		if ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) AND strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') OR $_SERVER['REQUEST_URI'] === '/csp/report/member') {
-			get_instance()->dic['log.php']->error($id . '-updateTimestamp-no update because AJAX-' . time());
-
-			return true;
-		}
-
 		// Prevent previous QB calls from messing with our queries
 		$this->_db->reset_query();
 
@@ -395,11 +364,7 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 			$this->_db->where('ip_address', $_SERVER['REMOTE_ADDR']);
 		}
 
-		$return = (bool) $this->_db->update($this->_config['save_path'], array('timestamp' => time()));
-		get_instance()->dic['log.php']->error($id . '-updateTimestamp-' . (int) $return . '-' . time());
-
-		return $return;
-//(bool) $this->_db->update($this->_config['save_path'], array('timestamp' => time()));
+		return (bool) $this->_db->update($this->_config['save_path'], array('timestamp' => time()));
 	}
 
 	// --------------------------------------------------------------------
@@ -422,9 +387,6 @@ class CI_Session_database_driver extends CI_Session_driver implements CI_Session
 		empty($this->_config['match_ip']) OR $this->_db->where('ip_address', $_SERVER['REMOTE_ADDR']);
 		$result = $this->_db->get();
 		empty($result) OR $result = $result->row();
-
-		get_instance()->dic['log.php']->error($id . '-validateId-' . (int) !empty($result));
-
 
 		return ! empty($result);
 	}
